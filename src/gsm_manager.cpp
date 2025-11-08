@@ -53,7 +53,14 @@ void gsm::SIM800::update()
       }
     break;
     
-    case State::SEND_NEXT_INTRUCTION : 
+    case State::SEND_NEXT_INTRUCTION :
+       //si on atteint le nombre de tache ajouté, c'est la fin des taches
+       if(_current_task_index >=  _number_of_task)
+       {
+          endOfTasks();
+          break;
+       }
+
       //En fonction du type de tache à executer
        switch(_currentTask.taskType)
        {
@@ -84,17 +91,39 @@ void gsm::SIM800::update()
 
 void gsm::SIM800::SendSms()
 {
-  switch (sendSMS_step)
-  {
-  case 0 :
-    /* code */
-    break;
-  
-  case 1 :
-    /* code */
-    break;
+    switch (sendSMS_step)
+    {
+    case 0 :
+      Serial.println("Envoi du SMS...");
+      _sim800.println("AT+CMGF=1"); // mode texte
+      break;
 
-  default:
-    break;
-  }
+    case 1 :
+      _sim800.println("AT+CMGS=\"+" + _currentTask.number + "\""); // ton numéro ici
+      break;
+
+    case 2 :
+      _sim800.println(_currentTask.message);
+      break;
+
+    case 3 :
+      _sim800.write(26); // <-- ceci envoie le Ctrl+Z
+      break;
+
+    //Fin de l'envoie des messages , on retourne l'état du système
+    case 4 :
+      Serial.println("SMS envoyé !");
+      _currentState = State::SEND_NEXT_INTRUCTION;
+      break;
+
+    default:
+      break;
+    }
+}
+
+void gsm::SIM800::endOfTasks()
+{
+  _number_of_task  = 0;
+  _current_task_index = 0;
+  _currentState = State::IDLE;
 }
