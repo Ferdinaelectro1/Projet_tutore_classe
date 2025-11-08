@@ -2,6 +2,9 @@
 
 gsm::SIM800::SIM800(HardwareSerial& sim800) : _sim800(sim800){
   _oldCommandTime = 0;
+  _current_task_index = 0;
+  _number_of_task = 0;
+
 }
 
 void gsm::SIM800::begin(unsigned long baudrate){
@@ -10,25 +13,88 @@ void gsm::SIM800::begin(unsigned long baudrate){
     Serial.println("Module SIM800 prêt.");
 }
 
-void gsm::SIM800::call(const String& number){
-    String cmd = "ATD+229"+number+";";
-    _sim800.println(cmd);
+void gsm::SIM800::addTask(const Task& task)
+{
+  if(_number_of_task < MAX_TACHE)
+  {
+    _tasks[_number_of_task] = task;
+    _number_of_task++;
+  }
 }
 
-void gsm::SIM800::send_msg(const String& number,const String& msg)
+void gsm::SIM800::update()
 {
-  Serial.println("Envoi du SMS...");
+  unsigned long now = millis();
+  switch(_currentState)
+  {
+    case State::IDLE :
+      if(_number_of_task) //si il y a de tache 
+      {
+        _currentState = State::SEND_NEXT_INTRUCTION; //executer la prochaine tache
+        _currentTask = _tasks[_current_task_index];
+      }
+    break;
 
-  _sim800.println("AT+CMGF=1"); // mode texte
-  delay(1000);
+    case State::MAKING_CALL :
+      if(now - _oldCommandTime >= COMMAND_INTERVALLE)
+      {
+        MakeCall();
+        makeCall_step ++;
+        _oldCommandTime = now;
+      }
+    break;
+    
+    case State::SENDING_SMS :
+      if(now - _oldCommandTime >= COMMAND_INTERVALLE)
+      {
+        SendSms();
+        sendSMS_step ++;
+        _oldCommandTime = now;
+      }
+    break;
+    
+    case State::SEND_NEXT_INTRUCTION : 
+      //En fonction du type de tache à executer
+       switch(_currentTask.taskType)
+       {
+          case TaskType::TASK_NONE : 
+            break;
 
-  _sim800.println("AT+CMGS=\"+" + number + "\""); // ton numéro ici
-  delay(1000);
+          case TaskType::TASK_MAKE_CALL :
+            _currentState = State::MAKING_CALL;
+            makeCall_step = 0;
+          break;
 
-  _sim800.println(msg);
-  _sim800.write(26); // <-- ceci envoie le Ctrl+Z
-  delay(1000);
+          case TaskType::TASK_SEND_SMS :
+            _currentState = State::SENDING_SMS;
+            sendSMS_step = 0;
+          break;
 
-  Serial.println("SMS envoyé !");
+          default:
+          break;
+       }
+       //on passe à la tache suivante
+       _current_task_index++;
+    break;
+    
+    default : 
+    break;
+  }
+}
 
+void gsm::SIM800::SendSms()
+{
+  switch (sendSMS_step)
+  {
+  case 0 :
+    /* code */
+    break;
+  
+  case 1 :
+    /* code */
+    break;
+
+  default:
+    break;
+  }
 }
