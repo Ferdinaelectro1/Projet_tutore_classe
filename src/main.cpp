@@ -9,23 +9,42 @@
 
 HardwareSerial SIM800(2); // Use UART2
 gsm::SIM800 gsmModule(SIM800);
-bool detecteShief = false;
+unsigned long startDetectionTime;
+bool detected = false;
 
 void setup() {
      Serial.begin(115200); 
-    pinMode(SWITCH, INPUT);
+    pinMode(SWITCH, INPUT_PULLUP);
     gsmModule.begin(); 
     pinMode(LED,OUTPUT);
 }
 
 void loop() {
-  gsmModule.update();
-   if (digitalRead(SWITCH) == HIGH) {
-    Serial.println("Switch is ON");
-    gsmModule.call("0153005087");
-  } else {
-    Serial.println("Switch is OFF");
+  unsigned long now =  millis();
+  if (digitalRead(SWITCH) == LOW) {
+    if(!detected)
+      startDetectionTime = now;
+    detected = true;
+  } 
+  if(detected)
+  {
+    if(now - startDetectionTime <= DETECTION_TIME_OUT )
+    {
+      if(digitalRead(SWITCH) == HIGH)
+        detected = false;
+    }
+    else
+    {
+      Serial.println("Détection");
+      gsm::Task task;
+      task.number = "0147813474";
+      task.message = "SMS Intrue";
+      task.taskType = gsm::TaskType::TASK_SEND_SMS;
+      gsmModule.addTask(task);
+      detected = false;
+    }
   }
-  digitalWrite(LED,!digitalRead(LED));
+  gsmModule.update();
   delay(1);
 }
+

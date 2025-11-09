@@ -89,6 +89,13 @@ void gsm::SIM800::update()
   }
 }
 
+void gsm::SIM800::MakeCall()
+{
+  String cmd = "ATD+229"+_currentTask.number+";";
+  _sim800.println(cmd);
+  _currentState = State::SEND_NEXT_INTRUCTION;
+}
+
 void gsm::SIM800::SendSms()
 {
     switch (sendSMS_step)
@@ -96,24 +103,29 @@ void gsm::SIM800::SendSms()
     case 0 :
       Serial.println("Envoi du SMS...");
       _sim800.println("AT+CMGF=1"); // mode texte
+      digitalWrite(2,!digitalRead(2));
       break;
 
     case 1 :
       _sim800.println("AT+CMGS=\"+" + _currentTask.number + "\""); // ton numéro ici
+      digitalWrite(2,!digitalRead(2));
       break;
 
     case 2 :
       _sim800.println(_currentTask.message);
+      digitalWrite(2,!digitalRead(2));
       break;
 
     case 3 :
       _sim800.write(26); // <-- ceci envoie le Ctrl+Z
+      digitalWrite(2,!digitalRead(2));
       break;
 
     //Fin de l'envoie des messages , on retourne l'état du système
     case 4 :
       Serial.println("SMS envoyé !");
       _currentState = State::SEND_NEXT_INTRUCTION;
+      digitalWrite(2,!digitalRead(2));
       break;
 
     default:
