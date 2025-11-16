@@ -36,7 +36,7 @@ void gsm::SIM800::update()
     break;
 
     case State::MAKING_CALL :
-      if(now - _oldCommandTime >= COMMAND_INTERVALLE)
+      if(now - _oldCommandTime >= CALL_INTERVALLE)
       {
         MakeCall();
         makeCall_step ++;
@@ -55,7 +55,7 @@ void gsm::SIM800::update()
     
     case State::SEND_NEXT_INTRUCTION :
        //si on atteint le nombre de tache ajouté, c'est la fin des taches
-       if(_current_task_index >=  _number_of_task)
+       if(_current_task_index >=  (_number_of_task))
        {
           endOfTasks();
           break;
@@ -94,6 +94,8 @@ void gsm::SIM800::MakeCall()
   String cmd = "ATD+229"+_currentTask.number+";";
   _sim800.println(cmd);
   _currentState = State::SEND_NEXT_INTRUCTION;
+  Serial.print("Appel de +229 ");
+  Serial.println(_currentTask.number);
 }
 
 void gsm::SIM800::SendSms()

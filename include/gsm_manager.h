@@ -7,6 +7,7 @@
 
 #define MAX_TACHE 5
 #define COMMAND_INTERVALLE 1000
+#define CALL_INTERVALLE 5000
 
 namespace gsm
 {
