@@ -18,8 +18,8 @@ const char* apiKey = "AIzaSyC7YhVNnmsI_tD-6mM1p887gbcIbmPzBC4";
 const char* databaseURL = "https://intruderalert-2a5d3-default-rtdb.firebaseio.com/";
 
 //Wifi infos
-const char* ssid = "Ferdinand Redmi 14C";
-const char* password = "tesla1ferdina";
+const char* ssid = "PALLAS_LINE";
+const char* password = "XK-B05-JoJo";
 
 HardwareSerial SIM800(2); // Use UART2
 gsm::SIM800 gsmModule(SIM800);
@@ -38,6 +38,8 @@ FirebaseConfig config; // configuration
 
 void handleDetect()
 {
+    Serial.println("Envoie du status vers Firebase ...");
+    Firebase.RTDB.setBool(&fbdo,"/surveillance/statut/intrusion_detectee", true);
     Serial.println("Détection");
     gsm::Task task;
     task.number = "0147813474";
@@ -73,6 +75,8 @@ void setup() {
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
     Serial.println("Initialisation Firebase terminée.");
+    // Initialisation de l'état dans Firebase
+    Firebase.RTDB.setBool(&fbdo,"/surveillance/statut/intrusion_detectee", false);
 }
 
 void loop() {
