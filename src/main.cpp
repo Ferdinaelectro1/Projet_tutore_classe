@@ -11,6 +11,7 @@
 #define INIT_WAIT 5000 //Attendre un peu à l'initialisation pour ignorer les évènements parasites du PIR
 #define UPDATE_FIREBASE_INTERVAL 5000  // Intervalle de mise à jour Firebase en ms
 #define LED_INTERVALLE_TOOGLE 500 // Intervalle de clignotement de la LED en ms
+#define BUZZER 18
 
 
 // Firebase
@@ -19,7 +20,7 @@ const char* databaseURL = "https://intruderalert-2a5d3-default-rtdb.firebaseio.c
 
 //Wifi infos
 const char* ssid = "PALLAS_LINE";
-const char* password = "XK-B05-JoJo";
+const char* password = "XK-B05-JOJO";
 
 HardwareSerial SIM800(2); // Use UART2
 gsm::SIM800 gsmModule(SIM800);
@@ -38,6 +39,7 @@ FirebaseConfig config; // configuration
 
 void handleDetect()
 {
+    tone(BUZZER, 1000,1000); // émettre un son de 1kHz
     Serial.println("Envoie du status vers Firebase ...");
     Firebase.RTDB.setBool(&fbdo,"/surveillance/statut/intrusion_detectee", true);
     Serial.println("Détection");
@@ -56,6 +58,7 @@ void setup() {
     pinMode(ECHO, INPUT);
     gsmModule.begin(); 
     pinMode(LED,OUTPUT);
+    pinMode(BUZZER, OUTPUT);
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -77,6 +80,7 @@ void setup() {
     Serial.println("Initialisation Firebase terminée.");
     // Initialisation de l'état dans Firebase
     Firebase.RTDB.setBool(&fbdo,"/surveillance/statut/intrusion_detectee", false);
+    isActive = Firebase.RTDB.getBool(&fbdo,"/surveillance/systeme/arme") ? fbdo.boolData() : false;
 }
 
 void loop() {
@@ -135,6 +139,7 @@ void loop() {
       else
       {
         isActive = false;
+        Firebase.RTDB.setBool(&fbdo,"/surveillance/statut/intrusion_detectee", false);
       }
     }
     else
