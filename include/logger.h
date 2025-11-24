@@ -7,7 +7,7 @@ class Logger
         static void log(LogLevel level, const char* message);
 
         template<typename... Args>
-        static void logf(LogLevel level,const char *format, Args... args)
+        static void logf(const LogLevel level,const char *format, Args... args)
         {
             char buffer[256];
             const int size =  snprintf(buffer,sizeof(buffer), format,args...);
@@ -21,7 +21,7 @@ class Logger
             }
         }
 
-        const static char* LOG_LEVEL_STR(LogLevel level)
+        const static char* LOG_LEVEL_STR(const LogLevel level)
         {
             switch(level)
             {
